@@ -5,5 +5,7 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <style name="Theme.Gallery" parent="Base.Theme.Gallery" />
+    <style name="Theme.Gallery" parent="Base.Theme.Gallery">
+        <item name="homeAsUpIndicator">@drawable/round_arrow_back_24</item>
+    </style>
 </resources>

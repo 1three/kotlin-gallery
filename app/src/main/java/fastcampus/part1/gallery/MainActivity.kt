@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -53,6 +55,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.toolbar.apply {
+            title = "사진 가져오기"
+            setSupportActionBar(this)
+        }
+
         initRecyclerView()
 
         binding.loadImageButton.setOnClickListener {
@@ -61,6 +68,24 @@ class MainActivity : AppCompatActivity() {
 
         binding.navigateFrameActivityButton.setOnClickListener {
             navigateToFrameActivity()
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_add -> {
+                checkReadImagesPermission()
+                true
+            }
+
+            else -> {
+                super.onOptionsItemSelected(item)
+            }
         }
     }
 
