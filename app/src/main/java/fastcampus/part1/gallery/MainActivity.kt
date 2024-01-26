@@ -2,12 +2,15 @@ package fastcampus.part1.gallery
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.GridLayoutManager
 import fastcampus.part1.gallery.databinding.ActivityMainBinding
 
 /**
@@ -25,7 +28,7 @@ import fastcampus.part1.gallery.databinding.ActivityMainBinding
  * sealed class
  * data class
  * Permission
- * Storage Access Framework
+ * Storage Access Framework (SAF, 단일 앱뿐만 아니라 모든 제공자에 불러오기 가능)
  * registerForActivityResult
  * */
 
@@ -38,14 +41,34 @@ import fastcampus.part1.gallery.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private val imageLoadLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uriList ->
+            updateImages(uriList)
+        }
+    private lateinit var imageAdapter: ImageAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        initRecyclerView()
+
         binding.loadImageButton.setOnClickListener {
             checkReadImagesPermission()
+        }
+    }
+
+    private fun initRecyclerView() {
+        imageAdapter = ImageAdapter(object : ImageAdapter.ItemClickListener {
+            override fun onLoadMoreClick() {
+                checkReadImagesPermission()
+            }
+        })
+
+        binding.imageRecyclerView.apply {
+            adapter = imageAdapter
+            layoutManager = GridLayoutManager(context, 2) // 2*n
         }
     }
 
@@ -55,7 +78,7 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_MEDIA_IMAGES
-            ) == PackageManager.PERMISSION_GRANTED -> loadImage()
+            ) == PackageManager.PERMISSION_GRANTED -> loadImages()
 
             shouldShowRequestPermissionRationale(
                 Manifest.permission.READ_MEDIA_IMAGES
@@ -69,6 +92,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestReadImagesPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
+            REQUEST_READ_MEDIA_IMAGES
+        )
+        // requestCode : 작업의 고유 식별자 ('내가' 권한 요청의 고유 식별자 100으로 설정)
+    }
+
     private fun showReadImagesPermissionRationale() {
         AlertDialog.Builder(this).apply {
             setMessage("이미지를 가져오기 위해\n갤러리 읽기 권한이 필요합니다.")
@@ -79,17 +111,34 @@ class MainActivity : AppCompatActivity() {
         }.show()
     }
 
-    private fun requestReadImagesPermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
-            REQUEST_READ_MEDIA_IMAGES
-        )
-        // requestCode : 작업의 고유 식별자 ('내가' 권한 요청의 고유 식별자 100으로 설정)
+    private fun loadImages() {
+        Toast.makeText(this, "갤러리로 이동합니다.", Toast.LENGTH_SHORT).show()
+        imageLoadLauncher.launch("image/*")
     }
 
-    private fun loadImage() {
-        Toast.makeText(this, "갤러리로 이동합니다.", Toast.LENGTH_SHORT).show()
+    private fun updateImages(uriList: List<Uri>) {
+        val images = uriList.map { ImageItems.Image(it) }
+        val updatedImages = imageAdapter.currentList.toMutableList().apply {
+            addAll(images)
+        }
+        imageAdapter.submitList(updatedImages)
+        // 이전에 가져온 이미지라도, 다시 이미지 가져오기 가능
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            REQUEST_READ_MEDIA_IMAGES -> {
+                val resultCode = grantResults.firstOrNull() ?: PackageManager.PERMISSION_DENIED
+                if (resultCode == PackageManager.PERMISSION_GRANTED) {
+                    loadImages()
+                }
+            }
+        }
     }
 
     companion object {
