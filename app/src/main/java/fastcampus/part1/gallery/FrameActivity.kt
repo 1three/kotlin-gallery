@@ -3,6 +3,7 @@ package fastcampus.part1.gallery
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.google.android.material.tabs.TabLayoutMediator
 import fastcampus.part1.gallery.databinding.ActivityFrameBinding
 
 class FrameActivity : AppCompatActivity() {
@@ -19,5 +20,10 @@ class FrameActivity : AppCompatActivity() {
         val frameAdapter = FrameAdapter(images)
 
         binding.viewPager.adapter = frameAdapter
+
+        // Tab 연결
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, _ ->
+            binding.viewPager.currentItem = tab.position
+        }.attach()
     }
 }
