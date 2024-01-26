@@ -2,4 +2,5 @@
     <string name="app_name">gallery</string>
     <string name="button_loadImage">이미지 불러오기</string>
     <string name="text_loadImage">사진 불러오기...</string>
+    <string name="title">나만의 앨범 만들기</string>
 </resources>

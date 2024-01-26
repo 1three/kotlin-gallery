@@ -1,6 +1,7 @@
 package fastcampus.part1.gallery
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -57,6 +58,10 @@ class MainActivity : AppCompatActivity() {
         binding.loadImageButton.setOnClickListener {
             checkReadImagesPermission()
         }
+
+        binding.navigateFrameActivityButton.setOnClickListener {
+            navigateToFrameActivity()
+        }
     }
 
     private fun initRecyclerView() {
@@ -76,8 +81,7 @@ class MainActivity : AppCompatActivity() {
         // 권한 유무 확인 및 요청
         when {
             ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_MEDIA_IMAGES
+                this, Manifest.permission.READ_MEDIA_IMAGES
             ) == PackageManager.PERMISSION_GRANTED -> loadImages()
 
             shouldShowRequestPermissionRationale(
@@ -94,9 +98,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestReadImagesPermission() {
         ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
-            REQUEST_READ_MEDIA_IMAGES
+            this, arrayOf(Manifest.permission.READ_MEDIA_IMAGES), REQUEST_READ_MEDIA_IMAGES
         )
         // requestCode : 작업의 고유 식별자 ('내가' 권한 요청의 고유 식별자 100으로 설정)
     }
@@ -126,9 +128,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
@@ -139,6 +139,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun navigateToFrameActivity() {
+        val images =
+            imageAdapter.currentList.filterIsInstance<ImageItems.Image>().map { it.uri.toString() }
+                .toTypedArray()
+        val intent = Intent(this, FrameActivity::class.java).putExtra("images", images)
+        startActivity(intent)
     }
 
     companion object {
